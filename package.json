@@ -11,6 +11,8 @@
   },
   "devDependencies": {
     "body-parser": "^1.20.0",
+    "dotenv": "^16.0.1",
+    "mongoose": "^6.4.6",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.19"
   }

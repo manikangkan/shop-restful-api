@@ -1,11 +1,28 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const PORT = process.env.PORT || 4000;
 
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
+
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to database🌟");
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}🤫`);
+    });
+  })
+  .catch((err) => {
+    console.log("Unable to connect to database: ", err.message);
+  });
 
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -40,8 +57,4 @@ app.use((error, req, res, next) => {
       message: error.message,
     },
   });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}🤫`);
 });
