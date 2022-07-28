@@ -1,12 +1,39 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, new Date().toISOString() + file.originalname);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  // reject a file
+  if (file.mimetype === "image/png" || file.mimetype === "image/jpg")
+    cb(null, true);
+  // accept a file
+  else cb(null, false);
+};
+
+// const upload = multer({ dest: "uploads/" });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+  fileFilter,
+});
 
 const Product = require("../models/product");
 
 router.get("/", (req, res, next) => {
   Product.find()
-    .select("name price _id")
+    .select("name price _id productImage")
     .then((products) => {
       const response = {
         count: products.length,
@@ -15,6 +42,7 @@ router.get("/", (req, res, next) => {
             _id: product._id,
             name: product.name,
             price: product.price,
+            productImage: product.productImage,
             request: {
               type: "GET",
               url: `http://localhost:4000/products/${product._id}`,
@@ -39,15 +67,17 @@ router.get("/", (req, res, next) => {
     });
 });
 
-router.post("/", (req, res, next) => {
+router.post("/", upload.single("productImage"), (req, res, next) => {
   // const product = {
   //   name: req.body.name,
   //   price: req.body.price,
   // };
+  console.log(req.file);
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
+    productImage: req.file.path,
   });
   product
     .save()
@@ -77,7 +107,7 @@ router.post("/", (req, res, next) => {
 router.get("/:productId", (req, res, next) => {
   const id = req.params.productId;
   Product.findById(id)
-    .select("name price _id")
+    .select("name price _id productImage")
     .then((doc) => {
       console.log(doc);
       doc
